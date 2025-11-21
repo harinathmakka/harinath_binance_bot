@@ -1,0 +1,266 @@
+BINANCE FUTURES TESTNET TRADING BOT — PROJECT REPORT
+
+Author: Harinath
+Project Title: Python-based CLI Binance Futures Testnet Trading Bot
+Platform: Ubuntu Linux / VS Code
+Exchange Used: Binance Futures Testnet (REST API)
+
+1. INTRODUCTION
+
+This project involves the development of a fully functional trading bot that interacts with the Binance Futures Testnet using Python. The bot is capable of performing multiple order types, validating exchange constraints, handling errors, logging operations, and managing orders efficiently through a Command-Line Interface (CLI).
+
+The bot demonstrates secure HMAC-SHA256 signature generation, strict parameter validation using exchange filters, maintainable architecture, and robust testing. The system is modular, safe, extendable, and suitable for learning algorithmic trading foundations.
+
+This report includes the architecture, important features, design decisions, challenges faced, how they were solved, and the complete test results.
+
+2. PROJECT OBJECTIVES
+
+The core requirements of the assignment were:
+
+1. Interaction with Binance Futures Testnet through REST API calls.
+2. Secure HMAC-SHA256 signature generation.
+3. Implementation of Market and Limit orders.
+4. Proper error handling and exception-safe execution.
+5. A complete Command-Line Interface for usage.
+6. Logging of operations into a file.
+7. Loading secrets and configuration using environment variables.
+8. Maintainable, modular, readable architecture.
+
+Additional advanced features implemented:
+
+1. OCO (One-Cancels-the-Other) — Take Profit + Stop Loss orders.
+2. STOP-MARKET order support.
+3. STOP-LIMIT order support.
+4. Exchange filter validation (tick size, step size, min notional, max/min price, percent price rules).
+5. Cancel single order and cancel all orders.
+6. Position inspection and account checks.
+7. Detailed structured logging of every request.
+
+All core and advanced requirements were successfully completed.
+
+3. SYSTEM ARCHITECTURE
+
+The bot uses a clean layered architecture with separation of concerns.
+
+1. cli.py:
+   Handles all CLI commands using argparse.
+
+2. client_wrapper.py:
+   Handles all REST API communication, request signing, sending signed and public requests, and common error formatting.
+
+3. utils.py:
+   Helper functions including rounding, filter parsing, and validation utilities.
+
+4. logger.py:
+   Configures loguru for structured logging into bot.log.
+
+5. market_orders.py:
+   Contains logic for placing market buy/sell orders.
+
+6. limit_orders.py:
+   Contains validated limit order placement logic.
+
+7. advanced/stop_orders.py:
+   Implements STOP-MARKET and STOP-LIMIT functionality with validation.
+
+8. advanced/oco.py:
+   Implements OCO bracket system (Take Profit + Stop Loss) including detached mode and wait mode (polling until entry is filled).
+
+Design principles used:
+- Separation of concerns
+- Single responsibility modules
+- Extensibility for new order types
+- Safety with strict validation
+- Full transparency through detailed logging
+
+4. FOLDER STRUCTURE
+
+harinath_binance_bot/
+  src/
+    cli.py
+    config.py
+    client_wrapper.py
+    utils.py
+    market_orders.py
+    limit_orders.py
+    logger.py
+    advanced/
+      stop_orders.py
+      oco.py
+  .env
+  .env.example
+  requirements.txt
+  README.md
+  bot.log
+  .gitignore
+
+5. FEATURE SUMMARY
+
+Environment and Configuration:
+- Secure loading of API keys and base URL through a .env file.
+- Config module ensures clean separation of secrets.
+- .gitignore ensures secrets remain safe.
+
+Binance REST API and Signature:
+- Server time synchronization.
+- HMAC-SHA256 signature generation.
+- Usage of urllib.urlencode to generate consistent query strings.
+
+Market Orders:
+- Market Buy and Market Sell.
+- Automatic rounding of quantity based on step size.
+- Logging of full request and response.
+
+Limit Orders:
+- Validation using exchange filters: minimum price, maximum price, tick size, step size, minimum notional, percent price boundaries.
+- Safe placement with warnings for invalid configurations.
+
+OCO Orders:
+- Automated bracket order system including Entry → TP order → SL order.
+- Detached mode (immediately return after placing all legs).
+- Wait mode (poll until entry fills).
+
+STOP-LIMIT Orders:
+- Validated to ensure they will not immediately trigger.
+- Tick rounding to avoid precision errors.
+- Both BUY and SELL stop-limit tested.
+
+STOP-MARKET Orders:
+- Same validation as stop-limit but without a limit price.
+- Supports closePosition=true (close entire position using market).
+
+Order Management:
+- View open orders.
+- Cancel a single order by orderId or clientOrderId.
+- Cancel all open orders for a symbol.
+
+Position Inspection:
+- Prints position amount, entry price, unrealized profit.
+- Helps to check active trades.
+
+Logging:
+- Every API request logged.
+- All validation and error details logged.
+- bot.log stored for API audits.
+
+6. MAJOR CHALLENGES AND SOLUTIONS
+
+1) .env BASE URL Corruption
+   Problem: Hidden characters caused “No connection adapters were found.”
+   Solution: Rewrote .env manually with clean text.
+
+2) Expired / Wrong API Keys
+   Problem: Using old keys caused signature errors.
+   Solution: Created fresh Testnet Futures API keys and updated .env.
+
+3) Incorrect Signature Logic
+   Old logic concatenated params incorrectly → invalid signature.
+   Solution: Implemented urlencode + HMAC-SHA256.
+
+4) Minimum Notional Error
+   0.001 BTC below required notional.
+   Solution: Minimum 0.002 BTC used.
+
+5) load_dotenv Failure Inside Inline Shell
+   Problem: load_dotenv() without specifying path fails in python - << 'PY'.
+   Solution: Always use load_dotenv(dotenv_path=".env").
+
+6) Limit Price Outside Exchange Range
+   Problem: Price exceeded allowed range.
+   Solution: Added filter validation for minPrice, maxPrice, percentPrice.
+
+7) Cancelling Non-Existent Orders
+   Binance returned “Unknown order sent.”
+   Solution: Bot treats this safely as already cancelled.
+
+8) STOP Orders Immediately Triggering
+   Problem: Binance error -2021 “Order would immediately trigger.”
+   Solution: Added pre-validation ensuring:
+            SELL stopPrice < current price
+            BUY stopPrice > current price
+            and enforcing tick buffer.
+
+9) Tick Rounding Issues
+   Problem: Exchange rejected prices with improper precision.
+   Solution: Added correct rounding for price and stopPrice.
+
+10) Quantity Step Size Errors
+    Solution: Implemented round_down_qty to match step size.
+
+11) client_wrapper Missing STOP Params
+    STOP-MARKET and STOP-LIMIT required extra parameters.
+    Solution: Added optional stopPrice, closePosition, workingType.
+
+12) Logging Not Structured
+    Raw error messages were unclear.
+    Solution: Added structured log_action entries.
+
+13) Price Fluctuations Impacting STOP Orders
+    Solution: Documented workflow: check price → choose stop → validate → place.
+
+7. TEST RESULTS
+
+All commands were successfully executed in a real environment.
+
+Operating System: Ubuntu Linux
+Python Version: 3.8
+Virtual Environment: venv
+API: Binance Futures Testnet REST
+
+Successful tests:
+1. auth-check
+2. Fetching exchange filters
+3. Fetching ticker price
+4. Market Buy (0.002 BTC)
+5. Market Sell
+6. Limit Sell
+7. Viewing open orders
+8. Cancel specific order
+9. Cancel-all orders
+10. Inspect open positions
+11. OCO detached mode
+12. OCO wait mode (entry filled)
+13. STOP-LIMIT SELL
+14. STOP-MARKET SELL with closePosition
+15. STOP-LIMIT BUY
+16. Logging of all events in bot.log
+
+All tests passed with zero Python errors and consistent Binance responses.
+
+8. RECOMMENDED REPORT SCREENSHOTS (for the PDF)
+
+The final PDF should include screenshots for:
+1. Auth-check success
+2. Market order tests
+3. Limit order test
+4. Open orders screen
+5. Cancel-all confirmation
+6. OCO order creation
+7. STOP-LIMIT success
+8. STOP-MARKET success
+9. Position inspection
+10. tail -n 40 bot.log
+
+9. CONCLUSION
+
+The Binance Futures Testnet Trading Bot is fully implemented with all required and advanced features. The project demonstrates secure request handling, strict exchange-compliant validation, robust modular architecture, and complete logging. All functionalities were tested thoroughly, and the bot performed consistently without errors.
+
+The system can be easily extended to implement:
+- Trading strategies
+- Websocket live streams
+- Hedge mode
+- Trailing stops
+- Automated risk controls
+
+This project meets and exceeds the objectives of the assignment and provides a strong foundation for automated trading development.
+
+10. APPENDIX — FUTURE ENHANCEMENTS
+
+1. Websocket live price feed
+2. Dynamic trailing SL/TP mechanism
+3. Strategy engine (grid, momentum, scalping)
+4. Automated margin and liquidation monitoring
+5. Hedge mode long-short operations
+6. Telegram or email notifications
+
+END OF REPORT
