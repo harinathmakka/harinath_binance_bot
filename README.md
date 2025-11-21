@@ -53,3 +53,264 @@ It demonstrates strong Python skills, API integration, error handling, validatio
 
 # 📁 **Project Structure**
 
+```
+
+harinath_binance_bot/
+│
+├── src/
+│   ├── cli.py                # CLI entrypoint
+│   ├── config.py             # Load .env + config
+│   ├── client_wrapper.py     # API signing + REST handling
+│   ├── utils.py              # Helpers (filters, rounding)
+│   ├── market_orders.py      # Market logic
+│   ├── limit_orders.py       # Limit logic
+│   ├── logger.py             # Loguru setup
+│   └── advanced/
+│       ├── oco.py            # OCO logic
+│       ├── stop_orders.py    # STOP-LIMIT + STOP-MARKET logic
+│
+├── requirements.txt
+├── .env.example
+├── README.md
+├── report.pdf
+├── bot.log
+└── .gitignore
+
+````
+
+---
+
+# 🔧 **Installation & Setup**
+
+## 1️⃣ Clone the repository
+
+```bash
+git clone https://github.com/harinathmakka/harinath_binance_bot
+cd harinath_binance_bot
+````
+
+---
+
+## 2️⃣ Create virtual environment
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+---
+
+## 3️⃣ Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 4️⃣ Create your `.env` file
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```
+BINANCE_API_KEY=YOUR_TESTNET_API_KEY
+BINANCE_SECRET_KEY=YOUR_TESTNET_SECRET_KEY
+
+TESTNET_BASE=https://testnet.binancefuture.com
+REQUEST_TIMEOUT=10
+RECV_WINDOW=5000
+```
+
+---
+
+# 🧪 **Verify Environment**
+
+```bash
+python3 - <<'PY'
+from dotenv import load_dotenv
+import os
+load_dotenv(dotenv_path=".env")
+print("TESTNET_BASE:", os.getenv("TESTNET_BASE"))
+print("API KEY LOADED:", bool(os.getenv("BINANCE_API_KEY")))
+PY
+```
+
+Should print:
+
+```
+TESTNET_BASE: https://testnet.binancefuture.com
+API KEY LOADED: True
+```
+
+---
+
+# 🎮 **CLI Usage Guide**
+
+Run commands using:
+
+```bash
+python3 -m src.cli <command> [options]
+```
+
+---
+
+# 📌 **Auth Check**
+
+```bash
+python3 -m src.cli auth-check
+```
+
+---
+
+# 📌 **Market Orders**
+
+### BUY
+
+```bash
+python3 -m src.cli market --symbol BTCUSDT --side BUY --qty 0.002
+```
+
+### SELL
+
+```bash
+python3 -m src.cli market --symbol BTCUSDT --side SELL --qty 0.002
+```
+
+---
+
+# 📌 **Limit Orders**
+
+### BUY LIMIT
+
+```bash
+python3 -m src.cli limit --symbol BTCUSDT --side BUY --qty 0.002 --price 82000
+```
+
+### SELL LIMIT
+
+```bash
+python3 -m src.cli limit --symbol BTCUSDT --side SELL --qty 0.002 --price 83000
+```
+
+---
+
+# 📌 **STOP-MARKET Orders**
+
+```bash
+python3 -m src.cli stop-market --symbol BTCUSDT --side SELL --qty 0.002 --stop-price 82000 --close-position
+```
+
+---
+
+# 📌 **STOP-LIMIT Orders**
+
+### BUY STOP-LIMIT
+
+```bash
+python3 -m src.cli stop-limit --symbol BTCUSDT --side BUY --qty 0.002 --stop-price 82500 --price 82550
+```
+
+### SELL STOP-LIMIT
+
+```bash
+python3 -m src.cli stop-limit --symbol BTCUSDT --side SELL --qty 0.002 --stop-price 82000 --price 81950
+```
+
+---
+
+# 📌 **OCO Orders (TP + SL)**
+
+### Detached mode
+
+```bash
+python3 -m src.cli oco --symbol BTCUSDT --side SELL --entry 83000 --tp 84000 --sl 82000 --qty 0.002 --detached
+```
+
+### Wait mode
+
+```bash
+python3 -m src.cli oco --symbol BTCUSDT --side SELL --entry 83000 --tp 84000 --sl 82000 --qty 0.002 --wait
+```
+
+---
+
+# 📌 **Cancel Orders**
+
+### Cancel specific order
+
+```bash
+python3 -m src.cli cancel --symbol BTCUSDT --order-id 123456
+```
+
+### Cancel all
+
+```bash
+python3 -m src.cli cancel-all --symbol BTCUSDT
+```
+
+---
+
+# 📌 **Check Positions**
+
+```bash
+python3 -m src.cli positions
+```
+
+---
+
+# 📝 **Logging**
+
+All logs saved to:
+
+```
+bot.log
+```
+
+Includes:
+
+* API requests
+* API responses
+* Order details
+* Validation failures
+* Exchange filters
+* Errors
+
+---
+
+# 📄 **Project Report**
+
+Full detailed report with architecture, screenshots, testing results:
+
+👉 **[📄 View / Download Report (PDF)](./report.pdf)**
+
+---
+
+# 🚀 **Future Enhancements**
+
+* Trailing Stop
+* Websocket live tick-stream
+* Strategy engine (grid, scalping, breakout)
+* Hedge mode
+* Telegram notifications
+* Portfolio analytics dashboard
+
+---
+
+# 🤝 **Contributing**
+
+Pull requests are welcome.
+For major changes, please open an issue first.
+
+---
+
+# 📧 **Contact**
+
+**Author:** Harinath Makka
+📩 Email: **[harinathmakka@gmail.com](mailto:harinathmakka@gmail.com)**
+🌐 GitHub: **[https://github.com/harinathmakka](https://github.com/harinathmakka)**
+
+---
