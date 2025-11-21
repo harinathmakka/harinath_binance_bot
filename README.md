@@ -302,7 +302,8 @@ All errors are shown clearly with guidance.
 Full detailed report is included:
 
 ```
-report.pdf
+[View Report](./report.pdf)
+
 ```
 
 Explains architecture, challenges, solutions, testing, and screenshots.
