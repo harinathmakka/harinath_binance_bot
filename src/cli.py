@@ -213,6 +213,24 @@ def stop_market_cmd(symbol, side, qty, stop_price, close_position):
         print("stop-market failed:", e)
         sys.exit(1)
 
+@cli.command("twap")
+@click.option("--symbol", required=True)
+@click.option("--side", required=True, type=click.Choice(["BUY", "SELL"], case_sensitive=False))
+@click.option("--qty", required=True, type=float, help="Total quantity to execute")
+@click.option("--parts", required=True, type=int, help="Number of slices")
+@click.option("--interval", required=True, type=int, help="Seconds between slices")
+def twap_cmd(symbol, side, qty, parts, interval):
+    """Execute a TWAP strategy (Market order slices)"""
+    try:
+        from .advanced.twap import execute_twap
+        result = execute_twap(symbol.upper(), side.upper(), float(qty), int(parts), int(interval))
+        print("\nTWAP Finished Summary:")
+        print("Executed slices:", result["executed_slices"], "/", result["expected_slices"])
+        print("Slice quantity:", result["slice_qty"])
+    except Exception as e:
+        print("TWAP failed:", e)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     cli()
