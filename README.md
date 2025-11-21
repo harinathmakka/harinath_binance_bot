@@ -1,9 +1,10 @@
+
 # **Binance Futures Testnet Trading Bot (Python CLI)**
 
 ### **Author: Harinath Makka**
 
 A fully functional, production-grade **Binance Futures Testnet trading bot** built in Python.  
-This bot supports **Market, Limit, OCO, STOP-MARKET, STOP-LIMIT** orders with complete exchange-filter validation, secure HMAC-SHA256 signing, structured logging, and a clean CLI interface.
+This bot supports **Market, Limit, OCO, STOP-MARKET, STOP-LIMIT, and TWAP** orders with complete exchange-filter validation, secure HMAC-SHA256 signing, structured logging, and a clean CLI interface.
 
 It demonstrates strong Python skills, API integration, error handling, validations, and modular architecture — suitable for internships and job submissions.
 
@@ -22,15 +23,20 @@ It demonstrates strong Python skills, API integration, error handling, validatio
 ### 🔁 Advanced Order Types
 - **OCO Orders** (Take Profit + Stop Loss)  
   - Detached mode  
-  - Wait mode (polling until entry fills)  
+  - Wait mode  
 
 - **STOP-MARKET Orders**  
   - Supports `closePosition=true`  
-  - Auto trigger-side validation  
+  - Auto trigger validation  
 
 - **STOP-LIMIT Orders**  
   - Prevents `-2021 Order would immediately trigger`  
   - Tick-size/precision auto-rounding  
+
+- **TWAP (Time Weighted Average Price)**  
+  - Splits a large order into smaller slices  
+  - Executes slices at fixed time intervals  
+  - MARKET-based execution for guaranteed fills  
 
 ### 🔒 Exchange Validation
 - Tick size, step size  
@@ -38,15 +44,14 @@ It demonstrates strong Python skills, API integration, error handling, validatio
 - Min notional  
 - Percent-price rules  
 - Correct rounding for price & quantity  
-- Detects invalid stop prices  
-- Detects invalid limit prices  
+- Detects invalid stop/limit prices  
 
 ### 🧾 Technical Highlights
 - HMAC-SHA256 signature generation  
 - `.env` secure API loading  
 - Modular file structure  
 - Structured logging (`bot.log`)  
-- Full CLI using argparse  
+- Full CLI using Click  
 - 100% compatible with Binance Futures Testnet  
 
 ---
@@ -67,7 +72,8 @@ harinath_binance_bot/
 │   ├── logger.py             # Loguru setup
 │   └── advanced/
 │       ├── oco.py            # OCO logic
-│       ├── stop_orders.py    # STOP-LIMIT + STOP-MARKET logic
+│       ├── stop_orders.py    # STOP-LIMIT + STOP-MARKET
+│       ├── twap.py           # TWAP Market-slice strategy
 │
 ├── requirements.txt
 ├── .env.example
@@ -139,18 +145,11 @@ print("API KEY LOADED:", bool(os.getenv("BINANCE_API_KEY")))
 PY
 ```
 
-Should print:
-
-```
-TESTNET_BASE: https://testnet.binancefuture.com
-API KEY LOADED: True
-```
-
 ---
 
 # 🎮 **CLI Usage Guide**
 
-Run commands using:
+All commands follow this format:
 
 ```bash
 python3 -m src.cli <command> [options]
@@ -222,15 +221,15 @@ python3 -m src.cli stop-limit --symbol BTCUSDT --side SELL --qty 0.002 --stop-pr
 
 ---
 
-# 📌 **OCO Orders (TP + SL)**
+# 📌 **OCO Orders (Take Profit + Stop Loss)**
 
-### Detached mode
+### Detached Mode
 
 ```bash
 python3 -m src.cli oco --symbol BTCUSDT --side SELL --entry 83000 --tp 84000 --sl 82000 --qty 0.002 --detached
 ```
 
-### Wait mode
+### Wait Mode
 
 ```bash
 python3 -m src.cli oco --symbol BTCUSDT --side SELL --entry 83000 --tp 84000 --sl 82000 --qty 0.002 --wait
@@ -238,15 +237,38 @@ python3 -m src.cli oco --symbol BTCUSDT --side SELL --entry 83000 --tp 84000 --s
 
 ---
 
+# 📌 **TWAP Orders (Time Weighted Average Price)**
+
+Split large orders into smaller MARKET slices executed over time.
+
+### Example:
+
+```bash
+python3 -m src.cli twap \
+    --symbol BTCUSDT \
+    --side BUY \
+    --qty 0.02 \
+    --parts 10 \
+    --interval 5
+```
+
+Meaning:
+
+* Total quantity = 0.02
+* Split into 10 slices → 0.002 each
+* 5 seconds between each slice
+
+---
+
 # 📌 **Cancel Orders**
 
-### Cancel specific order
+### Cancel single order
 
 ```bash
 python3 -m src.cli cancel --symbol BTCUSDT --order-id 123456
 ```
 
-### Cancel all
+### Cancel all open orders
 
 ```bash
 python3 -m src.cli cancel-all --symbol BTCUSDT
@@ -257,14 +279,14 @@ python3 -m src.cli cancel-all --symbol BTCUSDT
 # 📌 **Check Positions**
 
 ```bash
-python3 -m src.cli positions
+python3 -m src.cli inspect-pos
 ```
 
 ---
 
 # 📝 **Logging**
 
-All logs saved to:
+All logs saved into:
 
 ```
 bot.log
@@ -272,31 +294,33 @@ bot.log
 
 Includes:
 
-* API requests
-* API responses
+* All API requests
+* All responses
 * Order details
-* Validation failures
-* Exchange filters
-* Errors
+* Validation errors
+* OCO and STOP events
+* TWAP slices
+* Exchange filter details
 
 ---
 
 # 📄 **Project Report**
 
-Full detailed report with architecture, screenshots, testing results:
+Full project report: architecture, screenshots, test results:
 
-👉 **[📄 View / Download Report (PDF)](./report.pdf)**
+👉 **[📄 Download Report (PDF)](./report.pdf)**
 
 ---
 
 # 🚀 **Future Enhancements**
 
 * Trailing Stop
-* Websocket live tick-stream
-* Strategy engine (grid, scalping, breakout)
+* Grid trading strategy
+* Websocket live price feed
+* Strategy engine (scalping, breakout, grid)
 * Hedge mode
-* Telegram notifications
-* Portfolio analytics dashboard
+* Telegram integration
+* Portfolio analytics
 
 ---
 
